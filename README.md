@@ -55,7 +55,7 @@ The agent is the client-intelligence demo in `openbox-barrier-demo`. Clone it as
 ```bash
 git clone https://github.com/OpenBox-AI/openbox-barrier-demo.git
 git -C openbox-barrier-demo checkout c7ca6fb   # the commit the report was run on
-git clone https://github.com/ash-krnl/openbox-vs-langfuse.git
+git clone https://github.com/OpenBox-AI/openbox-vs-langfuse.git
 uv sync --project openbox-barrier-demo
 ```
 
