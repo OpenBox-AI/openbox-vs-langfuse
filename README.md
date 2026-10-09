@@ -1,8 +1,8 @@
 # OpenBox vs Langfuse: observability on the same LangGraph agent
 
 One LangGraph agent, run twice. Run 1 is wired to Langfuse only, run 2 is wired to OpenBox only.
-The graph, tools, documents, prompt and model are identical, and so is the work the agent does: 3 document
-reads, 1 briefing, 4 filings. The question is what each platform records and what its dashboard shows.
+The graph, tools, documents, prompt and model are identical, and so is the work the agent does: 3
+searches, 3 document reads, 1 briefing, 4 filings (11 tool calls). The question is what each platform records and what its dashboard shows.
 
 **Report:** [`OpenBox-vs-Langfuse-Observability.pdf`](OpenBox-vs-Langfuse-Observability.pdf) (4 pages, A4).
 The same content as a web page is in [`report/index.html`](report/index.html).
@@ -18,7 +18,7 @@ The same content as a web page is in [`report/index.html`](report/index.html).
 | Files the agent touched | Not visible | 8 reads and 5 writes, with real path, mode and bytes |
 | Outbound network | LLM calls only | Every HTTP request the process makes |
 | Decision per call | — | Verdict on every event and every span |
-| Tamper-evidence | — | Merkle root over 55 leaves, 27-link hash chain, RSA-SHA256 |
+| Tamper-evidence | — | Merkle root over 55 leaves (27 events + 14 spans × started/completed), 27-link hash chain, RSA-SHA256 |
 | Prompt management, evals, datasets | Yes | — |
 
 The two overlap on the agent-level trace. Langfuse goes deeper into the framework. OpenBox goes deeper into
@@ -130,7 +130,8 @@ scripts/count_openbox.sh      # events by type, file and HTTP spans, signed reco
 
 Expected: Langfuse `CHAIN 43, TOOL 11, GENERATION 1, AGENT 1` and `633 / 288` tokens with llama3.2.
 OpenBox `ActivityStarted 12, ActivityCompleted 12` plus 3 session events, spans `file.read 8, file.write 5,
-HTTP POST 1`, and a Merkle root over 55 leaves. Token counts vary with the model; the structure does not.
+HTTP POST 1`, and a Merkle root over 55 leaves: the 27 events plus 28 span records (each of the 14 spans
+is signed when it starts and when it completes). Token counts vary with the model; the structure does not.
 
 ### Use OpenAI instead of Ollama
 
@@ -202,7 +203,8 @@ uv run --with playwright python report/render_pdf.py
   In the report run its token panel did not count the local llama3.2 call.
 - OpenBox's file capture records everything the process opens, including reads the agent's code did not
   ask for (Python's `platform` module reading `SystemVersion.plist` on macOS).
-- The documents are fictional demo files from `openbox-barrier-demo`.
+- The documents are fictional demo files from `openbox-barrier-demo`. The company names in them (Coca-Cola,
+  Dell, Staples) are real brands used as placeholders; nothing in them comes from those companies.
 
 ## Tear down
 

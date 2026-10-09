@@ -93,7 +93,7 @@ td.only { background: var(--allow-tint); }
   <header>
     <div class="eyebrow">OpenBox · observability comparison · 9 Oct 2026</div>
     <h1>One LangGraph agent, wired to Langfuse in one run and to OpenBox in the other.</h1>
-    <p class="lede">The runs used the same agent, prompt, documents and model, and did the same work: 3 document reads, 1 briefing, 4 filings. Below is what each platform recorded and what its dashboard shows. The two overlap on the agent-level trace. Langfuse goes deeper into the framework. OpenBox goes deeper into the running process, and records a decision and a signed audit trail on top.</p>
+    <p class="lede">The runs used the same agent, prompt, documents and model, and did the same work: 3 searches, 3 document reads, 1 briefing, 4 filings (11 tool calls). Below is what each platform recorded and what its dashboard shows. The two overlap on the agent-level trace. Langfuse goes deeper into the framework. OpenBox goes deeper into the running process, and records a decision and a signed audit trail on top.</p>
   </header>
 
   <section>
@@ -119,7 +119,7 @@ td.only { background: var(--allow-tint); }
         <dt>27</dt><dd>governance events: prompt, session start and end, a start and an end for each of the 12 tool and LLM calls, each with a verdict</dd>
         <dt>13</dt><dd>file operations: 8 reads, 5 writes, each with path, mode and bytes</dd>
         <dt>1</dt><dd>HTTP call to the model: URL, headers, request and response bodies, status</dd>
-        <dt>1</dt><dd>signed session record: Merkle root over 55 leaves, 27-link hash chain, RSA-SHA256</dd>
+        <dt>1</dt><dd>signed session record: Merkle root over 55 leaves (the 27 events, plus each of the 14 spans signed once when it starts and once when it completes), 27-link hash chain, RSA-SHA256</dd>
       </dl></div>
     </div>
   </section>
@@ -189,7 +189,7 @@ td.only { background: var(--allow-tint); }
     <div class="pairhead"><span>Langfuse</span><span>OpenBox</span></div>
     <div class="pair">
       <figure><img src="obs/langfuse-6-home.jpg" alt="Langfuse home dashboard"><figcaption><b>Project home.</b> Trace counts, model cost and tokens, observations over time.</figcaption></figure>
-      <figure><img src="obs/openbox-1b-agent-overview-lower.jpg" alt="OpenBox agent overview metrics"><figcaption><b>Agent overview.</b> Token usage, cost, latency distribution and errors by cause, per agent. These are 7-day figures and include an earlier run of Amy.</figcaption></figure>
+      <figure><img src="obs/openbox-1b-agent-overview-lower.jpg" alt="OpenBox agent overview metrics"><figcaption><b>Agent overview.</b> Token usage, cost, latency distribution and errors by cause, per agent. These are 7-day figures. The token and cost figures come from an earlier gpt-4o-mini run of Amy, because the panel didn't count the local model used in the compared run.</figcaption></figure>
     </div>
   </section>
 
@@ -219,7 +219,7 @@ td.only { background: var(--allow-tint); }
 
   <section class="notes">
     <div class="eyebrow">Method and limits</div>
-    <p>Both runs were made on 9 Oct 2026, against a local OpenBox stack (develop) and a self-hosted Langfuse v4.55 (Python SDK 4.17). Counts come from each platform's own store: Langfuse's ClickHouse, and OpenBox's governance events and spans tables. The model was a local llama3.2, so Langfuse shows no cost. OpenBox's token panel didn't count this local model, so its token figures come from the earlier gpt-4o-mini run. The documents are fictional demo files.</p>
+    <p>Both runs were made on 9 Oct 2026, against a local OpenBox stack (develop) and a self-hosted Langfuse v4.55 (Python SDK 4.17). Counts come from each platform's own store: Langfuse's ClickHouse, and OpenBox's governance events and spans tables. The model was a local llama3.2, so Langfuse shows no cost. OpenBox's token panel didn't count this local model, so its token figures come from the earlier gpt-4o-mini run. The documents are fictional demo files; the company names in them (Coca-Cola, Dell, Staples) are real brands used as placeholders, and nothing in them comes from those companies.</p>
     <p>Reproduce: <code>uv run --project ../openbox-barrier-demo --with langfuse --with langchain python run_compare.py --mode langfuse</code>, then <code>--mode openbox</code>.</p>
   </section>
 </main>
