@@ -1,0 +1,225 @@
+<title>OpenBox and Langfuse, Side by Side</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<style>
+/* Layout: a single column; counts, then a field-by-field table, then paired screenshots (Langfuse | OpenBox). */
+:root {
+  --paper: #f7f8f6;
+  --ink: #17201c;
+  --muted: #5b665f;
+  --rule: #d6dcd6;
+  --panel: #ffffff;
+  --allow: #2f6b4f;
+  --block: #b3261e;
+  --block-tint: #fbeceb;
+  --allow-tint: #e8f2ec;
+  --accent: #1f4e79;
+  --display: "Fraunces", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121614; --ink: #e6ebe7; --muted: #9aa69f; --rule: #2c3530; --panel: #1a201d;
+    --allow: #7cc49f; --block: #f08a82; --block-tint: #3a1f1d; --allow-tint: #1c3328; --accent: #8db8e0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121614; --ink: #e6ebe7; --muted: #9aa69f; --rule: #2c3530; --panel: #1a201d;
+  --allow: #7cc49f; --block: #f08a82; --block-tint: #3a1f1d; --allow-tint: #1c3328; --accent: #8db8e0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.55 var(--body); }
+.page { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 56px; display: grid; gap: 36px; }
+h1, h2 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 4.2vw, 42px); line-height: 1.12; }
+h2 { font-size: 22px; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 14px; }
+.lede { font-size: 17px; color: var(--muted); }
+code, .mono { font-family: var(--mono); font-size: 0.88em; }
+section { display: grid; gap: 14px; }
+
+.setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.setup div { background: var(--panel); padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+.setup b { font-weight: 600; }
+.setup span { color: var(--muted); font-size: 14px; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 500 12px/1.3 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { width: 34%; }
+.v { display: inline-block; font: 500 12px/1 var(--mono); padding: 4px 7px; border-radius: 3px; margin-right: 6px; }
+.v.allow { color: var(--allow); background: var(--allow-tint); }
+.v.block { color: var(--block); background: var(--block-tint); }
+
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure img { width: 100%; border: 1px solid var(--rule); display: block; background: var(--panel); }
+figcaption { font-size: 13.5px; color: var(--muted); }
+figcaption b { color: var(--ink); font-weight: 600; }
+
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+.col { border-top: 3px solid var(--rule); padding-top: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.col.ob { border-top-color: var(--accent); }
+.col h3 { margin: 0; font: 600 15px/1.3 var(--body); }
+.col ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+
+.verdict { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; font-family: var(--display); font-size: 20px; line-height: 1.4; max-width: 60ch; }
+.notes { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; }
+.notes p { max-width: none; }
+pre { margin: 0; overflow-x: auto; background: var(--panel); border: 1px solid var(--rule); padding: 12px 14px; font: 12.5px/1.55 var(--mono); }
+.counts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .counts { grid-template-columns: 1fr; } }
+.count { border: 1px solid var(--rule); background: var(--panel); padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.count h3 { margin: 0; font: 600 15px/1.3 var(--body); }
+.count dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-variant-numeric: tabular-nums; }
+.count dt { font: 600 20px/1.2 var(--display); text-align: right; }
+.count dd { margin: 0; color: var(--muted); font-size: 14px; align-self: center; }
+.pairhead { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 760px) { .pairhead { display: none; } }
+td .no { color: var(--muted); }
+td.only { background: var(--allow-tint); }
+</style>
+
+<main class="page">
+  <header>
+    <div class="eyebrow">OpenBox · observability comparison · 9 Oct 2026</div>
+    <h1>One LangGraph agent, wired to Langfuse in one run and to OpenBox in the other.</h1>
+    <p class="lede">The runs used the same agent, prompt, documents and model, and did the same work: 3 document reads, 1 briefing, 4 filings. Below is what each platform recorded and what its dashboard shows. The two overlap on the agent-level trace. Langfuse goes deeper into the framework. OpenBox goes deeper into the running process, and records a decision and a signed audit trail on top.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">The setup</div>
+    <div class="setup">
+      <div><b>Agent</b><span>Amy, a deal analyst agent from our Policy Studio demo. LangGraph, 4 tools: <code>search_documents</code>, <code>read_document</code>, <code>write_briefing</code>, <code>upload_document</code>.</span></div>
+      <div><b>Run 1 · LangGraph + Langfuse</b><span>Langfuse's LangChain <code>CallbackHandler</code> passed in the graph config. No OpenBox.</span></div>
+      <div><b>Run 2 · LangGraph + OpenBox</b><span>The graph wrapped with <code>create_openbox_graph_handler</code>. No Langfuse.</span></div>
+      <div><b>No policies</b><span>Amy has no rules, so nothing was blocked and both runs did identical work.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What each one recorded</h2>
+    <div class="counts">
+      <div class="count"><h3>Langfuse · 56 observations</h3><dl>
+        <dt>43</dt><dd>graph steps: every LangGraph node and router (<code>schedule_search</code>, <code>select_candidate</code>, <code>after_read</code> …)</dd>
+        <dt>11</dt><dd>tool calls, each with input and full output</dd>
+        <dt>1</dt><dd>LLM generation: model, temperature, messages, 633 in / 288 out tokens</dd>
+        <dt>1</dt><dd>root agent span</dd>
+      </dl></div>
+      <div class="count"><h3>OpenBox · 27 events + 14 spans</h3><dl>
+        <dt>27</dt><dd>governance events: prompt, session start and end, a start and an end for each of the 12 tool and LLM calls, each with a verdict</dd>
+        <dt>13</dt><dd>file operations: 8 reads, 5 writes, each with path, mode and bytes</dd>
+        <dt>1</dt><dd>HTTP call to the model: URL, headers, request and response bodies, status</dd>
+        <dt>1</dt><dd>signed session record: Merkle root over 55 leaves, 27-link hash chain, RSA-SHA256</dd>
+      </dl></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Field by field</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Data</th><th>LangGraph + Langfuse</th><th>LangGraph + OpenBox</th></tr></thead>
+        <tbody>
+          <tr><td>Session and run timeline</td><td>Trace, session, tree and timeline views</td><td>Session list, replay, execution tree, timeline</td></tr>
+          <tr><td>Tool calls and their inputs</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Latency per step</td><td>Yes, per node, tool and LLM call</td><td>Yes, per tool and LLM call, and per span</td></tr>
+          <tr><td>Graph internals: routers and non-tool nodes</td><td class="only">Yes, all 43, plus an auto-drawn graph of the agent</td><td><span class="no">Not recorded. Only tool and LLM activities</span></td></tr>
+          <tr><td>Tool output</td><td class="only">Full return value, e.g. the whole document text</td><td><span class="no">Not on the event. The file span shows path and bytes read, not content</span></td></tr>
+          <tr><td>LLM call</td><td>Parsed: system and user messages, reply, model, temperature, token counts, cost (when the model has a price)</td><td>Raw HTTP: request and response bodies, 17 request headers (auth redacted), status code, duration</td></tr>
+          <tr><td>Files the agent touched</td><td><span class="no">Not visible</span></td><td class="only">Every read and write with real path, mode and bytes. Includes reads the tool code never asked for (Python read <code>SystemVersion.plist</code>)</td></tr>
+          <tr><td>Outbound network calls</td><td><span class="no">Only LLM calls, via the callback</span></td><td class="only">Every HTTP request the process makes, with URL, headers and bodies</td></tr>
+          <tr><td>Decision per call</td><td><span class="no">—</span></td><td class="only">Verdict on every event and every span (all ALLOW here)</td></tr>
+          <tr><td>Agent identity</td><td><span class="no">A free-text trace name</span></td><td class="only">A registered agent with its own key, trust tier and permissions</td></tr>
+          <tr><td>Tamper-evidence</td><td><span class="no">—</span></td><td class="only">Per-event Merkle proof, hash chain and signature, checked in the Verify tab</td></tr>
+          <tr><td>Dashboards</td><td>Traces, cost by model, latency percentiles, observation levels</td><td>Invocations, tokens, cost, latency P50–P99, tool health, errors by cause</td></tr>
+          <tr><td>Prompt management, evals, datasets, playground</td><td class="only">Yes</td><td><span class="no">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>The agent-level trace</h2>
+    <div class="pairhead"><span>Langfuse</span><span>OpenBox</span></div>
+    <div class="pair">
+      <figure><img src="obs/langfuse-1-trace-tree.jpg" alt="Langfuse trace tree for Amy's run"><figcaption><b>Trace tree.</b> Every LangGraph node is its own span, including control-flow steps like <code>schedule_search</code> and <code>after_selection</code>.</figcaption></figure>
+      <figure><img src="obs/openbox-3-llm-call.jpg" alt="OpenBox session replay event stream"><figcaption><b>Session replay.</b> Tool and LLM calls in order, with a playhead. Routing nodes don't appear.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>A tool call: reading the Coca-Cola brief</h2>
+    <div class="pairhead"><span>Langfuse</span><span>OpenBox</span></div>
+    <div class="pair">
+      <figure><img src="obs/langfuse-3-tool-read.jpg" alt="Langfuse read_document tool span with document content"><figcaption><b>Tool span.</b> The <code>document_id</code> in, the full document text out.</figcaption></figure>
+      <figure><img src="obs/openbox-13-file-span.jpg" alt="OpenBox read_document event with file_read span"><figcaption><b>Event plus span.</b> The <code>document_id</code> in, then the actual file read underneath it: real path, mode and its own ALLOW verdict.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>The LLM call</h2>
+    <div class="pairhead"><span>Langfuse</span><span>OpenBox</span></div>
+    <div class="pair">
+      <figure><img src="obs/langfuse-2-ChatOpenAI.jpg" alt="Langfuse generation with messages and tokens"><figcaption><b>Generation.</b> Messages rendered as a chat, model <code>llama3.2</code>, 921 tokens, 11.6 s. Easier to read.</figcaption></figure>
+      <figure><img src="obs/openbox-12-http-span.jpg" alt="OpenBox raw HTTP span for the model call"><figcaption><b>HTTP span.</b> The request as it left the process: endpoint, method, headers, request and response bodies, status. Closer to the wire.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>The run as a whole</h2>
+    <div class="pairhead"><span>Langfuse</span><span>OpenBox</span></div>
+    <div class="pair">
+      <figure><img src="obs/langfuse-4-graph.jpg" alt="Langfuse graph view of the LangGraph agent"><figcaption><b>Graph view.</b> Langfuse draws the agent's LangGraph topology from the trace, with call counts per node.</figcaption></figure>
+      <figure><img src="obs/openbox-7-verify.jpg" alt="OpenBox Verify tab showing integrity verified"><figcaption><b>Verify.</b> The 27 events are checked against the signed Merkle root and hash chain, so a reviewer can show the record wasn't altered.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Dashboards</h2>
+    <div class="pairhead"><span>Langfuse</span><span>OpenBox</span></div>
+    <div class="pair">
+      <figure><img src="obs/langfuse-6-home.jpg" alt="Langfuse home dashboard"><figcaption><b>Project home.</b> Trace counts, model cost and tokens, observations over time.</figcaption></figure>
+      <figure><img src="obs/openbox-1b-agent-overview-lower.jpg" alt="OpenBox agent overview metrics"><figcaption><b>Agent overview.</b> Token usage, cost, latency distribution and errors by cause, per agent. These are 7-day figures and include an earlier run of Amy.</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Overlap, and where it stops</h2>
+    <div class="cols">
+      <div class="col"><h3>Both</h3><ul>
+        <li>Hook into LangGraph with a few lines</li>
+        <li>Session timeline of tool and LLM calls, with inputs and latency</li>
+        <li>Per-agent or per-project usage dashboards</li>
+      </ul></div>
+      <div class="col"><h3>Langfuse goes deeper into the framework</h3><ul>
+        <li>Every graph node and router, and an auto-drawn graph</li>
+        <li>Tool outputs</li>
+        <li>LLM calls parsed into messages, tokens and cost</li>
+        <li>Prompt management, evals, datasets</li>
+      </ul></div>
+      <div class="col ob"><h3>OpenBox goes deeper into the process</h3><ul>
+        <li>Real file reads and writes, and outbound HTTP, below the tool</li>
+        <li>A verdict on every event and span</li>
+        <li>A registered identity for each agent</li>
+        <li>A signed, verifiable record of the session</li>
+      </ul></div>
+    </div>
+    <p class="verdict">The overlap is the agent-level trace, which any LangGraph integration can produce. Langfuse is built to debug and improve the agent. OpenBox records what the agent actually did on the system, in a form an auditor can verify, and the same hooks enforce policy.</p>
+  </section>
+
+  <section class="notes">
+    <div class="eyebrow">Method and limits</div>
+    <p>Both runs were made on 9 Oct 2026, against a local OpenBox stack (develop) and a self-hosted Langfuse v4.55 (Python SDK 4.17). Counts come from each platform's own store: Langfuse's ClickHouse, and OpenBox's governance events and spans tables. The model was a local llama3.2, so Langfuse shows no cost. OpenBox's token panel didn't count this local model, so its token figures come from the earlier gpt-4o-mini run. The documents are fictional demo files.</p>
+    <p>Reproduce: <code>uv run --project ../openbox-barrier-demo --with langfuse --with langchain python run_compare.py --mode langfuse</code>, then <code>--mode openbox</code>.</p>
+  </section>
+</main>
